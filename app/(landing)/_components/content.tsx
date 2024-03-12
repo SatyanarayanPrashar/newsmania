@@ -1,8 +1,8 @@
 "use client"
-import { FilterComp } from "@/components/filter";
-import axios from "axios";
-import { Filter } from "lucide-react";
 import React, { useEffect, useState } from "react";
+import axios from "axios";
+import { FilterComp } from "@/components/filter";
+import { Filter } from "lucide-react";
 
 interface Article {
   source: { id: string; name: string };
@@ -16,29 +16,51 @@ interface Article {
 }
 
 export const Content = () => {
-    const [headingContent, setHeadingContent] = useState<Article[]>([]); // Define the type
+    const [headingContent, setHeadingContent] = useState<Article[]>([]);
     const [loading, setLoading] = useState(false);
     const [selectedCountry, setSelectedCountry] = useState('');
     const [selectedHeading, setSelectedHeading] = useState('');
+    const [page, setPage] = useState(1);
 
     const handleCountryChange = (value: string) => {
         setSelectedCountry(value);
+        setPage(1);
     };
     const handleHeadingChange = (value: string) => {
         setSelectedHeading(value);
+        setPage(1);
     };
 
     useEffect(() => {
-        fetchInitialContent();
-    }, []);
+        const handleScroll = () => {
+            if (
+                window.innerHeight + document.documentElement.scrollTop >= document.documentElement.scrollHeight &&
+                !loading
+            ) {
+                setPage(prevPage => prevPage + 1);
+            }
+        };
 
-    const fetchInitialContent = async () => {
+        window.addEventListener('scroll', handleScroll);
+        return () => window.removeEventListener('scroll', handleScroll);
+    }, [loading]);
+
+    useEffect(() => {
+        if (!selectedCountry && !selectedHeading) {
+            fetchInitialContent(page);
+        } else {
+
+            fetchFilteredContent(selectedCountry, selectedHeading, page);
+        }
+    }, [selectedCountry, selectedHeading, page]);
+
+    const fetchInitialContent = async (page: number) => {
         setLoading(true);
-        const url = `https://newsapi.org/v2/top-headlines?country=us&apiKey=5b9496671e244ce6990752f8138f18bb`;
+        const url = `https://newsapi.org/v2/top-headlines?country=us&apiKey=5b9496671e244ce6990752f8138f18bb&page=${page}&pageSize=6`;
 
         try {
             const response = await axios.get(url);
-            setHeadingContent(response.data.articles);
+            setHeadingContent(prevContent => [...prevContent, ...response.data.articles]);
             setLoading(false);
         } catch (error) {
             console.error('Error fetching initial data:', error);
@@ -46,43 +68,49 @@ export const Content = () => {
         }
     };
 
-    const fetchFilteredContent = async (country: string, heading: string) => {
-        if (country && heading) {
-            setLoading(true);
-            const url = `https://newsapi.org/v2/top-headlines?country=${country}&category=${heading}&apiKey=5b9496671e244ce6990752f8138f18bb`;
+    const fetchFilteredContent = async (country: string, heading: string, page: number) => {
+        setLoading(true);
 
-            try {
-                const response = await axios.get(url);
-                setHeadingContent(response.data.articles);
-                setLoading(false);
-            } catch (error) {
-                console.error('Error fetching data:', error);
-                setLoading(false);
-            }
+        let url = `https://newsapi.org/v2/top-headlines?apiKey=5b9496671e244ce6990752f8138f18bb&pageSize=6&page=${page}`;
+
+        if (country) {
+            url += `&country=${country}`;
+        }
+
+        if (heading) {
+            url += `&category=${heading}`;
+        }
+
+        try {
+            const response = await axios.get(url);
+            setHeadingContent(prevContent => {
+                return page === 1 ? response.data.articles : [...prevContent, ...response.data.articles];
+            });
+            setLoading(false);
+        } catch (error) {
+            console.error('Error fetching data:', error);
+            setLoading(false);
         }
     };
 
     return (
         <div className="lg:flex">
-            {loading ? (
-                <p>Loading...</p>
-            ) : (
-                <div>
-                    <div className="flex justify-between items-center my-[10px] relative">
-                        <div className="top-[20rem] sticky">
-                            <FilterComp onCountryChange={handleCountryChange} onHeadingChange={handleHeadingChange} />
-                        </div>
-                        <button onClick={() => fetchFilteredContent(selectedCountry, selectedHeading)} className="flex ml-[10px] border rounded-md px-[30px] py-[4px]"> <Filter/> Filter</button>
+            <div>
+                <div className="flex justify-between items-center my-10 relative">
+                    <div className="top-[20rem] sticky">
+                        <FilterComp onCountryChange={handleCountryChange} onHeadingChange={handleHeadingChange} />
                     </div>
-                    {headingContent.map((article, index) => (
-                        <div key={index} className="text-start border rounded-md mb-[20px]">
-                            <img className="max-w-[40rem] w-[40rem] max-h-[25rem]" src={article.urlToImage} alt={article.title} />
-                            <h2 className="font-bold text-[17px] p-[10px]">{article.title}</h2>
-                            <p className="text-[15px] p-[10px]">{article.description}</p>
-                        </div>
-                    ))}
+                    <button onClick={() => fetchFilteredContent(selectedCountry, selectedHeading, page)} className="flex ml-4 border rounded-md px-6 py-2"> <Filter/> Filter</button>
                 </div>
-            )}
+                {headingContent.map((article, index) => (
+                    <div key={index} className="text-start border rounded-md mb-4">
+                        <img className="max-w-[40rem] w-[40rem] max-h-[25rem]" src={article.urlToImage} alt={article.title} />
+                        <h2 className="font-bold text-lg p-4">{article.title}</h2>
+                        <p className="text-base p-4">{article.description}</p>
+                    </div>
+                ))}
+                {loading && <p>Loading...</p>}
+            </div>
         </div>
-    )
-}
+    );
+};
