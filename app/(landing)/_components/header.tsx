@@ -22,7 +22,7 @@ export const Heading = () => {
     const [loading, setLoading] = useState(true);
 
     useEffect (() => {
-        axios.get("https://newsapi.org/v2/top-headlines?country=us&apiKey=5b9496671e244ce6990752f8138f18bb")
+        axios.get("https://newsapi.org/v2/top-headlines?country=in&apiKey=5b9496671e244ce6990752f8138f18bb")
         .then((res) => {
             console.log(res.data);
             setHeadingContent(res.data.articles as Article[]); // Update state correctly

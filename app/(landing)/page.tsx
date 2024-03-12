@@ -1,8 +1,10 @@
+import ScrollToTopButton from "@/components/scrolltotop";
 import { Heading } from "./_components/header";
 import { LeftSec } from "./_components/leftsection";
 import { RightSec } from "./_components/rightsection";
 
 const MarketingPage = () => {
+  
   return (
     <div className="min-h-full flex flex-col">
       <div className="flex flex-col items-center justify-center md:justify-start text-center gap-y-8 flex-1 px-6 pb-10 mx-10">
@@ -20,8 +22,8 @@ const MarketingPage = () => {
             <RightSec />
           </div>
         </div>
-        <p>Designed and Built by Satya</p>
       </div>
+      <ScrollToTopButton />
     </div>
   );
 }  
