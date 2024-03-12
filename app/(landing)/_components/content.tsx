@@ -34,7 +34,7 @@ export const Content = () => {
     useEffect(() => {
         const handleScroll = () => {
             if (
-                window.innerHeight + document.documentElement.scrollTop >= document.documentElement.scrollHeight &&
+                window.innerHeight + document.documentElement.scrollTop >= document.documentElement.scrollHeight/1.2 &&
                 !loading
             ) {
                 setPage(prevPage => prevPage + 1);
@@ -96,11 +96,12 @@ export const Content = () => {
     return (
         <div className="lg:flex">
             <div>
-                <div className="flex justify-between items-center my-10 relative">
+                <div className="flex items-center my-10 relative">
+                    <div className="flex mr-[20px]" > <Filter/> Filters:</div>
                     <div className="top-[20rem] sticky">
                         <FilterComp onCountryChange={handleCountryChange} onHeadingChange={handleHeadingChange} />
                     </div>
-                    <button onClick={() => fetchFilteredContent(selectedCountry, selectedHeading, page)} className="flex ml-4 border rounded-md px-6 py-2"> <Filter/> Filter</button>
+                    {/* <button onClick={() => fetchFilteredContent(selectedCountry, selectedHeading, page)} className="flex ml-4 border rounded-md px-6 py-2"> <Filter/> Filter</button> */}
                 </div>
                 {headingContent.map((article, index) => (
                     <div key={index} className="text-start border rounded-md mb-4">
